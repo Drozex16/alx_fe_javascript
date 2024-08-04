@@ -21,12 +21,12 @@ function addQuote() {
     const newQuoteCategory = document.getElementById('newQuoteCategory').value;
 
     if (newQuoteText && newQuoteCategory) {
-        const newQuote = { id: Date.now(), text: newQuoteText, category: newQuoteCategory };
+        const newQuote = { id: Date.now(), text: newQuoteText, category: newQuoteCategory, synced: false };
         quotes.push(newQuote);
         saveQuotes();
         populateCategories();
         alert("New quote added!");
-        syncWithServer();
+        syncQuotes();
     } else {
         alert("Please enter both quote text and category.");
     }
@@ -82,6 +82,7 @@ function importFromJsonFile(event) {
         saveQuotes();
         populateCategories();
         alert('Quotes imported successfully!');
+        syncQuotes();
     };
     fileReader.readAsText(event.target.files[0]);
 }
@@ -116,13 +117,18 @@ async function postQuoteToServer(quote) {
     }
 }
 
-function syncWithServer() {
-    quotes.forEach(quote => {
+async function syncQuotes() {
+    // Post unsynced quotes to the server
+    for (const quote of quotes) {
         if (!quote.synced) {
-            postQuoteToServer(quote);
+            await postQuoteToServer(quote);
             quote.synced = true;
         }
-    });
+    }
+
+    // Fetch latest quotes from the server and update local storage
+    await fetchQuotesFromServer();
+    saveQuotes();
 }
 
 function notifyUser(message) {
@@ -137,7 +143,6 @@ document.getElementById('newQuote').addEventListener('click', showRandomQuote);
 document.getElementById('addQuoteButton').addEventListener('click', addQuote);
 document.getElementById('exportQuotes').addEventListener('click', exportToJsonFile);
 
-createAddQuoteForm();
 populateCategories();
 filterQuotes();
 fetchQuotesFromServer();
