@@ -129,6 +129,7 @@ async function syncQuotes() {
     // Fetch latest quotes from the server and update local storage
     await fetchQuotesFromServer();
     saveQuotes();
+    notifyUser('Quotes synced with server!');
 }
 
 function notifyUser(message) {
